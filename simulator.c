@@ -19,9 +19,9 @@ int base_stop_condition(Process * running_p, int current_time_quantum){
 }
 
 int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, Process *, int (*) (Process *)), int * time_quantum){
+    *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
     switch(policy){
         case FCFS:
-            *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
             *check_for_ready_q = priority_dismiss; // priority value 전부 무시, 선착순으로 
             *pnp_stop_condition = nonpre_stop_condition;
             break;
@@ -31,23 +31,19 @@ int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop
             *pnp_stop_condition = nonpre_stop_condition;
             break;
         case np_SJF:
-            *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
             *check_for_ready_q = CPUt_check; // CPU 남은 burst time으로 판단 설정.
             *pnp_stop_condition = nonpre_stop_condition;
             break;
         case p_SJF:
-            *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
             *check_for_ready_q = CPUt_check; // CPU 남은 burst time으로 판단 설정.
             *pnp_stop_condition = pre_stop_condition;
             break;
 
         case np_Pri:
-            *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
             *check_for_ready_q = priority_check; // 우선수위 priority value로 판단 설정.
             *pnp_stop_condition = nonpre_stop_condition;
             break;
         case p_Pri:
-            *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
             *check_for_ready_q = priority_check; // 우선수위 priority value로 판단 설정.
             *pnp_stop_condition = pre_stop_condition;
             break;

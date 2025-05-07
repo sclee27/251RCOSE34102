@@ -63,20 +63,37 @@ int main(int argc, char ** argv){
         return -1;
     }
     int n_processes = atoi(argv[1]);
-    int scheduler = atoi(argv[2]);
+    int scheduler_policy = atoi(argv[2]);
     if ((n_processes < 1)||(scheduler <1)||(scheduler > 6)){
         printf("Wrong input numbers. n_processes has to be positive integer, scheduler should be 1 to 6.\n");
         return -1;
     }
 
-    // 시뮬레이터 설정, 프로세스 생성, job_queue 정비
+    // policy 인식, 프로세스 생성, job_queue 정비
+    int (* check_for_ready_q)(Process *);
+    int (* pnp_stop_condition) (Process *, Process *, int (*) (Process *));
+    int time_quantum;
+
     srand(time(NULL));
     HEADER * job_queue, * ready_queue, *wait_queue;
+    
     // process 생성 완료, job_queue 정렬 완료(Arrival_time 순서로)
     Config(&job_queue, &ready_queue, &wait_queue, n_processes);
-    //시뮬레이션 가동
-    //simulator(job_queue, scheduler);
-    //free()
 
-    return 0;
+    // 시뮬레이터 설정, 0일 때 error 처리
+    if (!schedule(scheduler_policy, &check_for_ready_q, &pnp_stop_condition, &time_quantum)){
+        del_Queue(job_queue);
+        del_Queue(wait_queue);
+        del_Queue(ready_queue);
+        return 0;
+    }
+
+    //시뮬레이션 가동
+    simulator(job_queue, &ready_queue, &wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
+
+    del_Queue(job_queue);
+    del_Queue(wait_queue);
+    del_Queue(ready_queue);
+
+    return 1;
 }
