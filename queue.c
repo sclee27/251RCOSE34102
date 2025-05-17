@@ -69,7 +69,6 @@ void push_node(HEADER * header, NODE * newnode, int check(Process * p)){
 
 Process * pop_node(HEADER * header){
     if (!(header->count)){
-        printf("The que is empty\n");
         return NULL;
     }
     else{

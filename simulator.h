@@ -11,20 +11,28 @@
 #define p_SJF 5   // CPU time check을 check함수로 + check When ready que pushed
 #define p_Pri 6   // Priority check을 check함수로 + check When ready que pushed
 
-int pre_stop_condition(Process * running_p, Process * newly_entered_p, 
+int pre_stop_condition(Process * CPU_running_p, HEADER * ready_que, 
                             int check_for_ready_q(Process *p));
 
 
-int nonpre_stop_condition(Process * running_p, Process * newly_entered_p, 
+int nonpre_stop_condition(Process * CPU_running_p, HEADER * ready_que, 
                             int check_for_ready_q(Process *p));
 
-int base_stop_condition(Process * running_p, int current_time_quantum);
 
-int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, Process *, int (*) (Process *)), int * time_quantum);
+int IO_Management(HEADER * wait_que);
 
-int simulator(HEADER * job_queue, HEADER ** ready_que, HEADER ** wait_que,  
+int CPU_Management(Process * CPU_running_p, int * left_time_quantum, int clock);
+
+void wait2ready(HEADER * wait_que, HEADER * ready_que, int check_for_ready_q(Process * p), int clock);
+
+void wait_or_terminate(Process * CPU_running_p, HEADER * wait_que, int clock);
+
+
+int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, HEADER *, int (*) (Process *)), int * time_quantum);
+
+int simulator(HEADER * job_queue, HEADER * ready_que, HEADER * wait_que,  
                 int check_for_ready_q(Process * p), 
-                int preemptive_stop_condition(Process * running_p, Process * newly_entered_p, int check_for_ready_q(Process *p)), 
+                int preemptive_stop_condition(Process * CPU_running_p, HEADER * ready_que, int check_for_ready_q(Process *p)), 
                 int time_quantum);
 
 #endif

@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "simulator.h"
 #include "queue.h"
 #include "process.h"
-
-// what to do with wait que????!!
-
 
 // job_Queue, ready_Queue, wait_Queue 생성, Process들 랜덤 생성 후 job_Queue에 Arrival_time 순으로 정렬.
 int Config(HEADER ** job_q, HEADER ** ready_q, HEADER ** wait_q, int n_processes){
@@ -64,14 +62,14 @@ int main(int argc, char ** argv){
     }
     int n_processes = atoi(argv[1]);
     int scheduler_policy = atoi(argv[2]);
-    if ((n_processes < 1)||(scheduler <1)||(scheduler > 6)){
+    if ((n_processes < 1)||(scheduler_policy <1)||(scheduler_policy > 6)){
         printf("Wrong input numbers. n_processes has to be positive integer, scheduler should be 1 to 6.\n");
         return -1;
     }
 
     // policy 인식, 프로세스 생성, job_queue 정비
     int (* check_for_ready_q)(Process *);
-    int (* pnp_stop_condition) (Process *, Process *, int (*) (Process *));
+    int (* pnp_stop_condition) (Process *, HEADER *, int (*) (Process *));
     int time_quantum;
 
     srand(time(NULL));
@@ -89,11 +87,12 @@ int main(int argc, char ** argv){
     }
 
     //시뮬레이션 가동
-    simulator(job_queue, &ready_queue, &wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
+    simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
+    printf("------------------\nSimulation Ended\n");
 
     del_Queue(job_queue);
     del_Queue(wait_queue);
     del_Queue(ready_queue);
-
+    printf("Deleted All queues\n");
     return 1;
 }

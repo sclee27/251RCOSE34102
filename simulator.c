@@ -2,23 +2,84 @@
 #include <stdlib.h>
 #include "simulator.h"
 
-int pre_stop_condition(Process * running_p, Process * newly_entered_p, int check_for_ready_q(Process *p)){
-    if (check_for_ready_q(running_p) > check_for_ready_q(newly_entered_p)) return 1; // CPU running process보다 우선순위 높으면(CPU burst time OR priority value 작으면) stop
+int pre_stop_condition(Process * CPU_running_p, HEADER * ready_que, int check_for_ready_q(Process *p)){
+    // CPU running process보다 우선순위 높으면(CPU burst time OR priority value 작으면) preempt
+    if (ready_que->head == NULL) return 0;
+    else if (check_for_ready_q(CPU_running_p) > check_for_ready_q(ready_que->head->p)) return 1;
     else return 0;
 }
 
-int nonpre_stop_condition(Process * running_p, Process * newly_entered_p, int check_for_ready_q(Process *p)){
+int nonpre_stop_condition(Process * CPU_running_p, HEADER * ready_que, int check_for_ready_q(Process *p)){
     return 0;
 }
 
-int base_stop_condition(Process * running_p, int current_time_quantum){
-    if (running_p == NULL) return 0;
-    else if (!(running_p->CPU_t)) return 1; // CPU running process 끝나면 stop
-    else if (!current_time_quantum) return 1; // current time quantum 0이면 stop  // RR이 아닌 경우에는 simulator()에서 매우 큰 값으로 설정해 무시할 조건.
+
+
+int IO_Management(HEADER * wait_que){
+    if (wait_que->head == NULL) return 0;
+    NODE * curnode = wait_que->head;
+    int flag = 0;
+    while (curnode != NULL){
+        (curnode->p->CPU_IO_t)[curnode->p->cur_index]--;
+        if (!burst_t_check(curnode->p)) flag = 1; // wait_que 중 IO_time 0된 Process 있으면 flag 1로 작동.
+        curnode = curnode->next;
+    }
+    return flag;
+}
+
+int CPU_Management(Process * CPU_running_p, int * left_time_quantum, int clock){
+    if (CPU_running_p == NULL) return 0;
+    
+    // decrement each counter
+    ((CPU_running_p ->CPU_IO_t)[CPU_running_p->cur_index])--;
+    *left_time_quantum = *left_time_quantum - 1;
+    printf("%d : Process [%d] (%d) CPU burst time left.\n", clock+1, CPU_running_p->PID, CPU_running_p->CPU_IO_t[CPU_running_p->cur_index]);
+    // burst 끝나면 1
+    if (!burst_t_check(CPU_running_p)) return 1;
     else return 0;
 }
 
-int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, Process *, int (*) (Process *)), int * time_quantum){
+void wait2ready(HEADER * wait_que, HEADER * ready_que, int check_for_ready_q(Process * p), int clock){
+    NODE * curnode = wait_que->head;
+    NODE * newnode;
+    Process * IOcomplete_p;
+    while (!burst_t_check(curnode->p)){
+        IOcomplete_p = pop_node(wait_que);
+        IOcomplete_p->cur_index++;
+        printf("%d : Process [%d] completed IO burst, re-entering ready_queue.\n", clock, IOcomplete_p->PID);
+        printf("cur_index %d---------------------next index value : %d\n", IOcomplete_p->cur_index, IOcomplete_p->CPU_IO_t[(IOcomplete_p->cur_index) + 1]);
+        newnode = Create_Node(IOcomplete_p);
+        if (newnode == NULL) {
+            printf("Failed memory allocation during creating node for ready queue. While simulator IO wait_queue management.\n");
+            return;
+        }
+        push_node(ready_que, newnode, check_for_ready_q);
+        curnode = curnode->next;
+        if (curnode == NULL) break;
+    }
+}
+
+void wait_or_terminate(Process * CPU_running_p, HEADER * wait_que, int clock){
+    //printf("cur_index %d---------------------next index value : %d\n", CPU_running_p->cur_index, CPU_running_p->CPU_IO_t[(CPU_running_p->cur_index) + 1]);
+    if (check_end(CPU_running_p)){
+        // terminated
+        printf("---------------------%d : Process [%d] terminated.\n", clock, CPU_running_p->PID);
+        free(CPU_running_p);
+    }
+    else{
+        // has IO burst left
+        CPU_running_p->cur_index++;
+        NODE * curnode = Create_Node(CPU_running_p);
+        if (curnode == NULL) {
+            printf("Failed memory allocation during creating node for wait queue. While simulator base stop condition.\n");
+            return;
+        }
+        push_node(wait_que, curnode, burst_t_check);
+        printf("---------------------%d : Process [%d] entered wait_que\n", clock, CPU_running_p->PID);
+    }
+}
+
+int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, HEADER *, int (*) (Process *)), int * time_quantum){
     *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
     switch(policy){
         case FCFS:
@@ -31,11 +92,11 @@ int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop
             *pnp_stop_condition = nonpre_stop_condition;
             break;
         case np_SJF:
-            *check_for_ready_q = CPUt_check; // CPU 남은 burst time으로 판단 설정.
+            *check_for_ready_q = burst_t_check; // CPU 남은 burst time으로 판단 설정.
             *pnp_stop_condition = nonpre_stop_condition;
             break;
         case p_SJF:
-            *check_for_ready_q = CPUt_check; // CPU 남은 burst time으로 판단 설정.
+            *check_for_ready_q = burst_t_check; // CPU 남은 burst time으로 판단 설정.
             *pnp_stop_condition = pre_stop_condition;
             break;
 
@@ -55,78 +116,95 @@ int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop
 }
 
 
-int simulator(HEADER * job_queue, HEADER ** ready_que, HEADER ** wait_que,  int check_for_ready_q(Process * p), int pnp_stop_condition(Process * running_p, Process * newly_entered_p, int check(Process *p)), int time_quantum){
+int simulator(HEADER * job_queue, HEADER * ready_que, HEADER * wait_que,  int check_for_ready_q(Process * p), int pnp_stop_condition(Process * CPU_running_p, HEADER * ready_que, int check(Process *p)), int full_time_quantum){
     int clock = 0;
-    int left_time_quantum = time_quantum;
+    int left_time_quantum = full_time_quantum;
     Process * next_entering_p = pop_node(job_queue);
     Process * CPU_running_p = NULL;
-    Process * IO_running_p = NULL;
-    Process * preemptive_temp;
+    Process * preempt_p;
     NODE * curnode;
+    int CPU_finished = 0;
+    int interrupt = 0;
     
-    while(!(empty_Queue(*ready_que) && empty_Queue(*wait_que) && (next_entering_p == NULL))){
-        // job_que에서 arrival time 되면 ready queue로 process 이동
+    while(!(empty_Queue(ready_que) && empty_Queue(wait_que) && (next_entering_p == NULL)&&(CPU_running_p == NULL))){
+        // ENTER
+        // Enter Ready Q : job_que에서 arrival time 되면 ready queue로 process 이동
         while ((next_entering_p != NULL) && (next_entering_p->Arrival_t == clock)){
-            // preemptive일때는 next_enterin_p 들어올 때 check => CPU preemption 일어나야 한다면 그 둘의 프로세스를 교체한다.
-            if ((CPU_running_p != NULL) && pnp_stop_condition(CPU_running_p, next_entering_p, check_for_ready_q)){
-                preemptive_temp = CPU_running_p;
-                CPU_running_p = next_entering_p;
-                next_entering_p = preemptive_temp;
-                left_time_quantum = time_quantum;
-            }
-            // next_enterin_p를 ready_que에 넣는다.
+            printf("%d : Process [%d] arrived\n", clock, next_entering_p->PID);
+            // next_entering_p를 ready_que에 넣는다.
             curnode = Create_Node(next_entering_p);
             if (curnode == NULL) {
-                printf("Failed memory allocation during creating node for ready queue.");
+                printf("Failed memory allocation during creating node for ready queue.\n");
                 return -1;
             }
-            push_node(*ready_que, curnode, check_for_ready_q); // check는 지정 필요!! scheduler마다 다르게
+            push_node(ready_que, curnode, check_for_ready_q); // check는 지정 필요!! scheduler마다 다르게
             next_entering_p = pop_node(job_queue);
         }
 
-        //TIME ELAPSE
-
-        // CPU 작동 중 없는데, ready_que에 방금 들어왔다면 작동. + CPU 작동 중이라면 time 깎기
-        if ((CPU_running_p == NULL) && (!empty_Queue(*ready_que))){
-            CPU_running_p = pop_node(*ready_que);
+        // Enter CPU
+        // CPU 작동 중 없는데, ready_que에 process 있다면 작동
+       if ((CPU_running_p == NULL) && (!empty_Queue(ready_que))){
+            CPU_running_p = pop_node(ready_que);
             // new process running in CPU
+            printf("---------------------%d : CPU starts running Process [%d].\n", clock, CPU_running_p->PID);
             //set up time_quantum
-            left_time_quantum = time_quantum;
-            // decrement each counter
-            CPU_running_p ->CPU_t--;
-            left_time_quantum--;
-        }
-        else if (CPU_running_p != NULL){
-            // decrement each counter
-            CPU_running_p ->CPU_t--;
-            left_time_quantum--;
+            left_time_quantum = full_time_quantum;
         }
 
-        // IO running processes to decrement time cntr
-
+        else if ((CPU_running_p != NULL) && pnp_stop_condition(CPU_running_p, ready_que, check_for_ready_q)){
+            preempt_p = CPU_running_p;
+            CPU_running_p = pop_node(ready_que);
+            printf("---------------------%d : Process [%d] (%d) preempted by Process [%d] (%d)\n", clock, preempt_p->PID, check_for_ready_q(preempt_p), CPU_running_p->PID, check_for_ready_q(CPU_running_p));
+            // 실행하던 process를 ready_que에 넣는다.
+            curnode = Create_Node(preempt_p);
+            if (curnode == NULL) {
+                printf("Failed memory allocation during creating node for ready queue.\n");
+                return -1;
+            }
+            push_node(ready_que, curnode, check_for_ready_q);
+            //set up time_quantum
+            left_time_quantum = full_time_quantum;
+        }
         
+        //TIME ELAPSE (Change)
+        // CPU decrement
+        CPU_finished = CPU_Management(CPU_running_p, &left_time_quantum, clock);
 
-        // IF CPU execution terminated,
-        if (base_stop_condition(CPU_running_p, left_time_quantum)){
-            if (CPU_running_p->CPU_t) {
-                // CPU_t left => back to ready_queue
-                curnode = Create_Node(CPU_running_p);
-                if (curnode == NULL) {
-                    printf("Failed memory allocation during creating node for ready queue. While base stop condition.");
-                    return -1;
-                }
-                push_node(*ready_que, curnode, check_for_ready_q);
-            }
-            else{
-                // it has completed its CPU burst time.
-                // Maybe add option to go to waiting queue?
-                // Maybe print what has been terminated?
-                printf("Process PID %d terminated at clock %d\n", CPU_running_p->PID, clock);
-                free(CPU_running_p);
-            }
-            CPU_running_p = NULL;
-        }
+        // IO decrement
+        interrupt = IO_Management(wait_que);
+
+        // CLOCK MOVED
         clock++;
+        //printf("%d : time quantum (%d)\n", clock, left_time_quantum);
+
+        // RESULT (Check)
+
+        // finished IO -> Enter ready que
+        if (interrupt){
+            // There exists a process in wait_que that completed its IO burst
+            wait2ready(wait_que, ready_que, check_for_ready_q, clock);
+            interrupt = 0;
+        }
+        // finished CPU-> enter wait que or terminate
+        if (CPU_finished){
+            wait_or_terminate(CPU_running_p, wait_que, clock);
+            CPU_running_p = NULL;
+            left_time_quantum = full_time_quantum;
+        }
+        // finished time_quantum
+        else if (!left_time_quantum){
+            // CPU_running_p를 ready_que에 넣는다.
+            curnode = Create_Node(CPU_running_p);
+            if (curnode == NULL) {
+                printf("Failed memory allocation during creating node for ready queue.\n");
+                return -1;
+            }
+            push_node(ready_que, curnode, check_for_ready_q);
+            printf("---------------------%d : Process [%d] re-entered ready_que, due to time_quantum\n", clock, CPU_running_p->PID);
+            CPU_running_p = NULL;
+            left_time_quantum = full_time_quantum;
+        }
     }
-    return 0;
+        // while LOOP 종료, 모든 큐 empty
+        return 0;
 }
