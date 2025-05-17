@@ -40,22 +40,19 @@ int CPU_Management(Process * CPU_running_p, int * left_time_quantum, int clock){
 }
 
 void wait2ready(HEADER * wait_que, HEADER * ready_que, int check_for_ready_q(Process * p), int clock){
-    NODE * curnode = wait_que->head;
     NODE * newnode;
     Process * IOcomplete_p;
-    while (!burst_t_check(curnode->p)){
+    while ((wait_que->head != NULL )&&(!burst_t_check(wait_que->head->p))){
         IOcomplete_p = pop_node(wait_que);
         IOcomplete_p->cur_index++;
         printf("%d : Process [%d] completed IO burst, re-entering ready_queue.\n", clock, IOcomplete_p->PID);
-        printf("cur_index %d---------------------next index value : %d\n", IOcomplete_p->cur_index, IOcomplete_p->CPU_IO_t[(IOcomplete_p->cur_index) + 1]);
+        //printf("cur_index %d---------------------next index value : %d\n", IOcomplete_p->cur_index, IOcomplete_p->CPU_IO_t[(IOcomplete_p->cur_index) + 1]);
         newnode = Create_Node(IOcomplete_p);
         if (newnode == NULL) {
             printf("Failed memory allocation during creating node for ready queue. While simulator IO wait_queue management.\n");
             return;
         }
         push_node(ready_que, newnode, check_for_ready_q);
-        curnode = curnode->next;
-        if (curnode == NULL) break;
     }
 }
 
