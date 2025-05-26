@@ -45,7 +45,7 @@ void wait2ready(HEADER * wait_que, HEADER * ready_que, int check_for_ready_q(Pro
     while ((wait_que->head != NULL )&&(!burst_t_check(wait_que->head->p))){
         IOcomplete_p = pop_node(wait_que);
         IOcomplete_p->cur_index++;
-        printf("%d : Process [%d] completed IO burst, re-entering ready_queue.\n", clock, IOcomplete_p->PID);
+        printf("---------------------%d : Process [%d] completed IO burst, re-entering ready_queue.\n", clock, IOcomplete_p->PID);
         //printf("cur_index %d---------------------next index value : %d\n", IOcomplete_p->cur_index, IOcomplete_p->CPU_IO_t[(IOcomplete_p->cur_index) + 1]);
         newnode = Create_Node(IOcomplete_p);
         if (newnode == NULL) {
@@ -77,14 +77,30 @@ void wait_or_terminate(Process * CPU_running_p, HEADER * wait_que, int clock){
 }
 
 int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, HEADER *, int (*) (Process *)), int * time_quantum){
-    *time_quantum = RR_time_quantum_F; // RR_time_quantum 최대한도로 설정해 무시.
+    int input = 0;
     switch(policy){
         case FCFS:
             *check_for_ready_q = priority_dismiss; // priority value 전부 무시, 선착순으로 
             *pnp_stop_condition = nonpre_stop_condition;
             break;
         case RR:
-            *time_quantum = RR_time_quantum_T; // RR_time_quantum 실제로 설정.
+            // time_quantum 유저 설정 기능
+            printf("Default time quantum : %d\nTo set a different time quantum, enter 1. Else, enter 0.\ninput : ", RR_time_quantum_default);
+            scanf("%d", &input);
+            if (input){
+                // time_quantum customized value
+                printf("Enter time quantum : ");
+                scanf("%d", &input);
+                if (input < 1){
+                    printf("Wrong input, time_quantum should be positive integer. Setting time_quantum to default...\n");
+                    input = RR_time_quantum_default;
+                }
+                *time_quantum = input;
+            }
+            else{
+                // default time_quantum
+                *time_quantum = RR_time_quantum_default;
+            }
             *check_for_ready_q = priority_dismiss; // priority value 전부 무시, 선착순으로
             *pnp_stop_condition = nonpre_stop_condition;
             break;
