@@ -102,14 +102,16 @@ int Config(HEADER ** job_q, HEADER ** ready_q, HEADER ** wait_q, int n_processes
 int main(int argc, char ** argv){
     // input [process 개수, scheduler algorithm 종류 코드] 확인, 처리
     if (argc != 3){
-        printf("Program_name\tNumber_of_processes\tScheduler\n%d\tFCFS\n%d\tnon-preemptive SJF\n%d\tnon-preemptive Priority\n%d\tRound Robin\n%d\tpreemptive SJF\n%d\tpreemptive Priority\n", FCFS, np_SJF, np_Pri, RR, p_SJF, p_Pri);
+        printf("Program_name\tNumber_of_processes\tScheduler\n%d\tFCFS\n%d\tnon-preemptive SJF\n%d\tnon-preemptive Priority\n%d\tRound Robin\n%d\tpreemptive SJF\n%d\tpreemptive Priority\n%d\tFor ALL algorithms & Compare\n", FCFS, np_SJF, np_Pri, RR, p_SJF, p_Pri, ALL);
         printf("rerun the program.");
         return -1;
     }
     int n_processes = atoi(argv[1]);
     int scheduler_policy = atoi(argv[2]);
-    if ((n_processes < 1)||(scheduler_policy <1)||(scheduler_policy > 6)){
-        printf("Wrong input numbers. n_processes has to be positive integer, scheduler should be 1 to 6.\n");
+    if ((n_processes < 1)||(scheduler_policy <1)||(scheduler_policy > 7)){
+        printf("Wrong input numbers. n_processes has to be positive integer, scheduler should be 1 to 7.\n");
+        printf("Program_name\tNumber_of_processes\tScheduler\n\n%d\tFCFS\n%d\tnon-preemptive SJF\n%d\tnon-preemptive Priority\n%d\tRound Robin\n%d\tpreemptive SJF\n%d\tpreemptive Priority\n%d\tFor ALL algorithms & Compare\n", FCFS, np_SJF, np_Pri, RR, p_SJF, p_Pri, ALL);
+        printf("rerun the program.");
         return -1;
     }
 
@@ -128,7 +130,7 @@ int main(int argc, char ** argv){
         return -1;
     }
 
-    // 시뮬레이터 설정, 0일 때 error 처리
+    // 시뮬레이터 algorithm 설정, 0일 때 error 처리
     if (!schedule(scheduler_policy, &check_for_ready_q, &pnp_stop_condition, &time_quantum)){
         del_Queue(job_queue);
         del_Queue(wait_queue);
@@ -136,7 +138,31 @@ int main(int argc, char ** argv){
         return -1;
     }
 
+    // hyperparamter 설정, 랜덤 프로세스 생성, 정렬된 job_queue와 비어있는 wait_queue, ready_queue 생성,
+    // schedule 알고리즘을 위한 기본 도구 함수들까지 설정 완료된 상태. ALL일 때는 schedule 이루어지지 않았음.
+    // 모든 설정 완료
+
     //시뮬레이션 가동
+    /*
+    if (scheduler_policy == 7){
+        for (int i = 1;i<7;i++){
+            printf("");
+            if (!schedule(i, &check_for_ready_q, &pnp_stop_condition, &time_quantum)){
+                del_Queue(job_queue);
+                del_Queue(wait_queue);
+                del_Queue(ready_queue);
+                return -1;
+            }
+            simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
+            printf("------------------\nSimulation Ended\n");
+        }
+    }
+    else {
+        simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
+        printf("------------------\nSimulation Ended\n");
+    }
+    */
+
     simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
     printf("------------------\nSimulation Ended\n");
 

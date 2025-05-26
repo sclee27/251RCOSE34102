@@ -11,7 +11,7 @@ Process * Create_Process(int pid, int Arrival_r, int Priority_r, int Interleave_
     p->PID = pid;
     p->Arrival_t = (rand()% Arrival_r) + 1;
     p->priority = (rand()% Priority_r) + 1;
-    printf("PID:%d\tArrival time:%d\tPriority:%d\n", p->PID, p->Arrival_t, p->priority);
+    printf("\nPID:%d\tArrival time:%d\tPriority:%d\n", p->PID, p->Arrival_t, p->priority);
     printf("CPU, IO bursts : ");
     int ran;
     //p->CPU_IO_t bursts 개수 = 홀수, Interleave_MAX보다 작게

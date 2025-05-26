@@ -10,6 +10,8 @@
 #define RR 4      // Priority check을 check함수로 + all priority set to 1 + Timer()
 #define p_SJF 5   // CPU time check을 check함수로 + check When ready que pushed
 #define p_Pri 6   // Priority check을 check함수로 + check When ready que pushed
+#define ALL 7   // 모든 알고리즘 시뮬레이션 후 evaluation 비교 
+
 
 int pre_stop_condition(Process * CPU_running_p, HEADER * ready_que, 
                             int check_for_ready_q(Process *p));
