@@ -31,7 +31,7 @@ void input_for_hyperparam(int * Arrival_r, int * Priority_r, int * Interleave_r,
 
 }
 
-// job_Queue, ready_Queue, wait_Queue 생성, Process들 랜덤 생성 후 job_Queue에 Arrival_time 순으로 정렬.
+// job_Queue, 비어있는 ready_Queue, 비어있는 wait_Queue 생성, Process들 랜덤 생성 후 job_Queue에 Arrival_time 순으로 정렬.
 // Random Process Creation에서의 hyperparameter들의 값을 디폴트 값으로 할지, 유저가 직접 입력할지 선택.
 // Each Burst Range 를 반환하여 RR이 아닐 때에 process가 preempt 당하지 않도록 time_quantum을 설정할 값을 반환.
 // RR일 경우는 이 이후에 schedule함수에서 재선언한다.
@@ -98,7 +98,6 @@ int Config(HEADER ** job_q, HEADER ** ready_q, HEADER ** wait_q, int n_processes
 }
 
 
-
 int main(int argc, char ** argv){
     // input [process 개수, scheduler algorithm 종류 코드] 확인, 처리
     if (argc != 3){
@@ -141,30 +140,19 @@ int main(int argc, char ** argv){
     // hyperparamter 설정, 랜덤 프로세스 생성, 정렬된 job_queue와 비어있는 wait_queue, ready_queue 생성,
     // schedule 알고리즘을 위한 기본 도구 함수들까지 설정 완료된 상태. ALL일 때는 schedule 이루어지지 않았음.
     // 모든 설정 완료
-
+    
+    // avg_turnaround_time, avg_wait_time 담을 배열 생성
+    double turnaround[6];
+    double wait[6];
+    
     //시뮬레이션 가동
-    /*
     if (scheduler_policy == 7){
-        for (int i = 1;i<7;i++){
-            printf("");
-            if (!schedule(i, &check_for_ready_q, &pnp_stop_condition, &time_quantum)){
-                del_Queue(job_queue);
-                del_Queue(wait_queue);
-                del_Queue(ready_queue);
-                return -1;
-            }
-            simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
-            printf("------------------\nSimulation Ended\n");
-        }
+        Simulate_All(job_queue, ready_queue, wait_queue, &check_for_ready_q, &pnp_stop_condition, &time_quantum, turnaround, wait);
     }
     else {
-        simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
-        printf("------------------\nSimulation Ended\n");
+        simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum, turnaround, wait);
     }
-    */
-
-    simulator(job_queue, ready_queue, wait_queue, check_for_ready_q, pnp_stop_condition, time_quantum);
-    printf("------------------\nSimulation Ended\n");
+    // 배열에 저장된 것으로 평가???
 
     del_Queue(job_queue);
     del_Queue(wait_queue);

@@ -15,6 +15,7 @@ NODE * Create_Node(Process * new_p){
     }
 }
 
+
 HEADER * Create_Que(){
     HEADER * h = (HEADER *)malloc(sizeof(HEADER));
     if (h == NULL){
@@ -95,5 +96,5 @@ void del_Queue(HEADER * queue){
 }
 
 int empty_Queue(HEADER * queue){
-    return (queue->count == 0);
+    return ((queue == NULL) || (queue->count == 0));
 }

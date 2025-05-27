@@ -19,6 +19,8 @@ typedef struct process{
 // Random Process Creation
 Process * Create_Process(int pid, int Arrival_r, int Priority_r, int Interleave_r, int Each_burst_r);
 
+Process * Copy_Process(Process * old_process);
+
 int priority_check(Process * p);
 
 int burst_t_check(Process * p);

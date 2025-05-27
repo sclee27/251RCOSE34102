@@ -32,6 +32,25 @@ Process * Create_Process(int pid, int Arrival_r, int Priority_r, int Interleave_
     return p;
 }
 
+Process * Copy_Process(Process * old_process){
+    if (old_process == NULL) return NULL;
+    
+    Process * new_process = (Process *)malloc(sizeof(Process));
+    if (new_process == NULL){
+        printf("Memory allocation failure during Process Copy.\n");
+        return NULL;
+    }
+    new_process->PID = old_process->PID;
+    new_process->Arrival_t = old_process->Arrival_t;
+    for (int i =0; i<20;i++){
+        new_process->CPU_IO_t[i] = old_process->CPU_IO_t[i];
+        if (new_process->CPU_IO_t[i] == -1) break;
+    }
+    new_process->cur_index = old_process->cur_index;
+    new_process->priority = old_process->priority;
+    return new_process;
+}
+
 int priority_check(Process * p){
     return p->priority;
 }

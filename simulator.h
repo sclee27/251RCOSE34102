@@ -3,6 +3,7 @@
 
 #include "process.h"
 #include "queue.h"
+#include "evaluation.h"
 
 #define FCFS 1    // Priority check을 check함수로 + all priority set to 1
 #define np_SJF 2  // CPU time check을 check함수로 
@@ -27,14 +28,23 @@ int CPU_Management(Process * CPU_running_p, int * left_time_quantum, int clock);
 
 void wait2ready(HEADER * wait_que, HEADER * ready_que, int check_for_ready_q(Process * p), int clock);
 
-void wait_or_terminate(Process * CPU_running_p, HEADER * wait_que, int clock);
+void wait_or_terminate(Process * CPU_running_p, HEADER * wait_que, Terminated_HEADER * terminated_queue, int clock);
+
 
 
 int schedule(int policy, int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, HEADER *, int (*) (Process *)), int * time_quantum);
 
-int simulator(HEADER * job_queue, HEADER * ready_que, HEADER * wait_que,  
+
+int simulator(HEADER * job_queue, HEADER * ready_queue, HEADER * wait_queue,  
                 int check_for_ready_q(Process * p), 
                 int preemptive_stop_condition(Process * CPU_running_p, HEADER * ready_que, int check_for_ready_q(Process *p)), 
-                int time_quantum);
+                int time_quantum, double * avg_turn_t, double * avg_wait_t);
 
+
+int Simulate_All(HEADER * job_queue, HEADER * ready_queue, HEADER * wait_queue, 
+                int (** check_for_ready_q)(Process *), int (** pnp_stop_condition) (Process *, HEADER *, int (*) (Process *)), 
+                int * time_quantum, double * avg_turn_t, double * avg_wait_t);
+
+// Algorithm 숫자 코드를 알고리즘 이름으로 출력 
+void print_Algorithm(int policy);
 #endif
