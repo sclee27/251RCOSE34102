@@ -63,7 +63,7 @@ void wait_or_terminate(Process * CPU_running_p, HEADER * wait_que, Terminated_HE
         printf("%d : Process [%d] terminated.\n", clock, CPU_running_p->PID);
         // Terminated_queue에 현재 종료된 process 값 Terminated_Process 데이터로 바꿔 넣기.
         Insert_TP(terminated_queue, CPU_running_p, clock);
-        // CPU_running_p Process * 타입은 free 
+        // CPU_running_p Process * 타입 free 
         free(CPU_running_p);
     }
     else{

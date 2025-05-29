@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "process.h"
 
+// Process 생성, Process * 타입 동적 할당 후 저장
 Process * Create_Process(int pid, int Arrival_r, int Priority_r, int Interleave_r, int Each_burst_r){
     Process * p = (Process *)malloc(sizeof(Process));
     if (p == NULL){
@@ -32,6 +33,9 @@ Process * Create_Process(int pid, int Arrival_r, int Priority_r, int Interleave_
     return p;
 }
 
+// Job_queue에서 Ready_queue로 arrive할 때 Job_queue 동일하게 유지하기 위해 Process 복사.
+// Process 주소를 받아 Process 값들을 복사한 뒤 새로운 Process 주소 동적할당
+// 주소를 반환
 Process * Copy_Process(Process * old_process){
     if (old_process == NULL) return NULL;
     
@@ -51,6 +55,7 @@ Process * Copy_Process(Process * old_process){
     return new_process;
 }
 
+// Ready_queue에서 Scheduling (comparison) 기준으로 사용되는
 int priority_check(Process * p){
     return p->priority;
 }

@@ -13,6 +13,7 @@ int bursts_sum(int * arr){
     return sum;
 }
 
+// Terminated Process 생성
 Terminated_Process * Create_TP(Process * p, int cur_clock){
     Terminated_Process * new_tp = (Terminated_Process *)malloc(sizeof(Terminated_Process));
     if (new_tp == NULL) return NULL;
@@ -22,7 +23,7 @@ Terminated_Process * Create_TP(Process * p, int cur_clock){
     new_tp->next= NULL;
     return new_tp;
 }
-
+// Terminated HEADER (큐) 생성 
 Terminated_HEADER * Create_TQ(){
     Terminated_HEADER * new_tq = (Terminated_HEADER *)malloc(sizeof(Terminated_HEADER));
     if (new_tq == NULL) return NULL;
@@ -32,7 +33,7 @@ Terminated_HEADER * Create_TQ(){
 }
 
 // insert Terminated Process into Terminated Queue (process terminated할 때마다 simulator 함수 안에서 적용)
-// (Job_Queue와 동일한 순서) arrvial_time 순으로 정렬
+// (Job_Queue와 동일한 순서) arrvial_time 순 + 동일할 때는 PID 작은 순서로 정렬 
 // 에러 반환값 -1, 정상 반환값 0
 int Insert_TP(Terminated_HEADER * terminated_queue, Process * p, int cur_clock){
     // Create new Terminated Process 
@@ -68,6 +69,7 @@ int Insert_TP(Terminated_HEADER * terminated_queue, Process * p, int cur_clock){
 }
 
 // simulator 함수 안에서 while loop 끝난 뒤 사용. 
+// simulator 안 while문 안에서 만들어진 terminated_queue와 변경되지 않은 job_queue 값을 이용해 avg_turn_t, avg_wait_t 계산 + 포인터에 저장
 void Evaluate(Terminated_HEADER * terminated_queue, HEADER * job_que, double * avg_turn_t, double * avg_wait_t){
     if (terminated_queue->cnt != job_que->count){
         printf("job queue different from terminated queue...(Count)\n");
@@ -106,7 +108,7 @@ void Evaluate(Terminated_HEADER * terminated_queue, HEADER * job_que, double * a
     *avg_wait_t = ((double) wait_t_sum) / terminated_queue->cnt;
 }
 
-// Terminated_Queue 다시 쓸 수 있게 비우기 
+// Terminated_Queue 제거&free
 int Del_TPQueue(Terminated_HEADER * terminated_queue){
     if (terminated_queue == NULL){
         return -1;
