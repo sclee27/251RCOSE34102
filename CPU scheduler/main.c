@@ -102,7 +102,7 @@ int main(int argc, char ** argv){
     // input [process 개수, scheduler algorithm 종류 코드] 확인, 처리
     if (argc != 3){
         printf("Program_name\tNumber_of_processes\tScheduler\n%d\tFCFS\n%d\tnon-preemptive SJF\n%d\tnon-preemptive Priority\n%d\tRound Robin\n%d\tpreemptive SJF\n%d\tpreemptive Priority\n%d\tFor ALL algorithms & Compare\n", FCFS, np_SJF, np_Pri, RR, p_SJF, p_Pri, ALL);
-        printf("rerun the program.");
+        printf("rerun the program.\n");
         return -1;
     }
     int n_processes = atoi(argv[1]);
